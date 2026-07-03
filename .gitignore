@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+
+# Data
+*.db
+*.sqlite3
+
+# Node (if Vite dev-server is ever added per PROJECT_PLAN.md §16)
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
