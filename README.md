@@ -106,14 +106,8 @@ then optionally passed through `backend/bot/llm.py`'s `humanize()`:
 
 ## Hardware
 
-A representative one-room circuit (Arduino Uno + relays for 3 lights and 2
-fans, 5 switch inputs, a voltage-divider current sensor stand-in for an
-ACS712) lives in [`hardware/tinkercad/`](hardware/tinkercad/README.md): pin
-map, component list, and the `sketch.ino` that prints device + current state
-as JSON over serial. It runs standalone in Tinkercad, independent of the
-backend simulator. The circuit still needs to be wired up in Tinkercad itself
-and verified — the screenshot and live Tinkercad link in that README are
-placeholders until that manual step is done.
+See [`hardware/tinkercad/README.md`](hardware/tinkercad/README.md) for the
+Tinkercad circuit schematic, sketch, and screenshot.
 
 ## A note on the "15 devices" count
 
