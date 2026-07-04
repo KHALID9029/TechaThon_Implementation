@@ -67,7 +67,7 @@ async def test_api_state_matches_contract_shape(client):
     assert set(data.keys()) == {"server_time", "office_hours", "total_watts", "today_kwh", "rooms"}
     assert data["office_hours"] == {"start": "09:00", "end": "17:00"}
     assert data["total_watts"] == 0  # freshly seeded -- everything off
-    assert data["today_kwh"] == 0.0
+    assert data["today_kwh"] == store_module.DEMO_BASELINE_KWH  # cosmetic seed baseline, not 0
     assert len(data["rooms"]) == 3
 
     room = data["rooms"][0]

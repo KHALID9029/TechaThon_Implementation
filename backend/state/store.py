@@ -39,6 +39,18 @@ DEVICE_TEMPLATE: list[tuple[str, int, int]] = [
     ("light", 3, 15),
 ]
 
+# Cosmetic-only demo baseline: a freshly seeded database starts today's usage
+# counter at this many kWh instead of 0.0, so the dashboard doesn't sit at
+# "0.0 kWh today" for the first several real minutes of a demo while real
+# ticks slowly accumulate a few hundred watts over a few real seconds each
+# (that slow climb at SIM_TIME_SCALE=1 is physically correct, not a bug --
+# this constant just makes a fresh demo look less like it's stuck at zero).
+# Applied exactly once, the moment the device table is first seeded (see
+# seed_if_empty below) -- restarting an app against an existing DB never
+# re-applies or bumps it. Not simulated/measured usage, just a plausible
+# starting point representing "usage so far today" before the app started.
+DEMO_BASELINE_KWH = 2.5
+
 
 def _now() -> str:
     """Virtual-clock 'now' (ISO8601). Every store.py write that doesn't get an
@@ -75,7 +87,8 @@ async def init_db(db_path: Optional[str] = None) -> None:
 
 
 async def seed_if_empty(db_path: Optional[str] = None) -> bool:
-    """Insert the 3 rooms + 15 devices if the device table is empty.
+    """Insert the 3 rooms + 15 devices if the device table is empty, plus a
+    one-time DEMO_BASELINE_KWH starting point for today's usage counter.
 
     Returns True if it seeded, False if devices already existed (no-op).
     """
@@ -120,6 +133,16 @@ async def seed_if_empty(db_path: Optional[str] = None) -> bool:
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             device_rows,
         )
+
+        # One-time cosmetic baseline -- see DEMO_BASELINE_KWH above. DO NOTHING
+        # (not the accumulating upsert add_daily_usage() uses) so this can
+        # never double-count even if seed_if_empty() somehow ran twice.
+        await db.execute(
+            "INSERT INTO daily_usage (day, watt_seconds) VALUES (?, ?) "
+            "ON CONFLICT(day) DO NOTHING",
+            (_today(), DEMO_BASELINE_KWH * 3_600_000),
+        )
+
         await db.commit()
         return True
 
