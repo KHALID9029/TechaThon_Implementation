@@ -5,7 +5,7 @@
 
 **Screenshot:** [`screenshot.png`](screenshot.png)  
 **Code:** [`sketch.ino`](sketch.ino) — paste into Tinkercad under **Code → Text**
-
+**Tinkercad:** https://www.tinkercad.com/things/8VZM2FF4zQl/editel?returnTo=%2Fdashboard&sharecode=ovs_E0saNOX5pQPUsA_qLUjDWyCJSJcCdOkaWSCYtYk
 ---
 
 ## What's going on here?
