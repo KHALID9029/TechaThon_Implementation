@@ -54,6 +54,30 @@ async def test_seed_if_empty_is_idempotent(db_path: str):
     assert len(snapshot.devices) == 15  # not doubled by the second call
 
 
+async def test_seed_if_empty_seeds_demo_baseline_kwh(db_path: str):
+    await store.seed_if_empty(db_path=db_path)
+
+    today = store._today()
+    watt_seconds = await store.get_daily_usage(day=today, db_path=db_path)
+
+    assert watt_seconds == store.DEMO_BASELINE_KWH * 3_600_000
+
+
+async def test_seed_if_empty_does_not_rebump_baseline_on_second_call(db_path: str):
+    await store.seed_if_empty(db_path=db_path)
+    today = store._today()
+
+    # Simulate real usage accumulating on top of the baseline before a restart.
+    await store.add_daily_usage(1000.0, day=today, db_path=db_path)
+    before = await store.get_daily_usage(day=today, db_path=db_path)
+
+    seeded_again = await store.seed_if_empty(db_path=db_path)
+    after = await store.get_daily_usage(day=today, db_path=db_path)
+
+    assert seeded_again is False
+    assert after == before  # unchanged -- no double-counted baseline
+
+
 async def test_update_device_state_round_trips(db_path: str):
     await store.seed_if_empty(db_path=db_path)
     before = await store.get_snapshot(db_path=db_path)
