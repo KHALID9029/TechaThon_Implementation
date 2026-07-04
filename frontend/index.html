@@ -4,8 +4,84 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Office Electrical Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
-    <p>Mock backend is running. Dashboard UI lands in Phase B2.</p>
+  <body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div id="offline-banner" class="hidden bg-red-600 text-white text-center text-sm py-1">
+      Connection lost — reconnecting…
+    </div>
+
+    <header class="border-b border-slate-800 px-6 py-4 flex flex-wrap items-center gap-x-10 gap-y-2">
+      <h1 class="text-lg font-semibold tracking-tight">Office Electrical Monitor</h1>
+
+      <div class="flex items-baseline gap-2">
+        <span id="total-watts" class="text-3xl font-bold tabular-nums">0</span>
+        <span class="text-sm text-slate-400">W</span>
+      </div>
+
+      <div class="flex items-baseline gap-2 text-sm text-slate-400">
+        <span id="today-kwh" class="text-slate-100 font-medium tabular-nums">0.0</span>
+        <span>kWh today</span>
+      </div>
+
+      <div id="server-clock" class="text-sm text-slate-400 tabular-nums">--:--:--</div>
+
+      <div class="flex items-center gap-2 text-sm ml-auto">
+        <span id="online-dot" class="status-dot"></span>
+        <span id="online-text" class="text-slate-400">Connecting…</span>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 p-6">
+      <div>
+        <section id="rooms" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"></section>
+
+        <section>
+          <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-2">Devices</h2>
+          <table class="w-full text-sm border-separate border-spacing-y-1">
+            <tbody id="device-list"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <aside>
+        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-2">Alerts</h2>
+        <ul id="alerts-list" class="space-y-2"></ul>
+      </aside>
+    </main>
+
+    <template id="room-card-template">
+      <article class="room-card rounded-lg border border-slate-800 bg-slate-900 p-4">
+        <div class="flex items-baseline justify-between">
+          <h3 class="room-name font-medium"></h3>
+          <span class="room-watts text-sm text-slate-400"></span>
+        </div>
+        <div class="room-svg-slot mt-3 h-32 flex items-center justify-center text-slate-600 text-xs">
+          floor plan — Phase B3
+        </div>
+      </article>
+    </template>
+
+    <template id="device-row-template">
+      <tr class="device-row bg-slate-900">
+        <td class="w-6 py-2 pl-3 rounded-l-md"><span class="status-dot"></span></td>
+        <td class="device-label py-2"></td>
+        <td class="device-wattage py-2 text-right text-slate-400 w-16"></td>
+        <td class="device-last-changed py-2 pr-3 rounded-r-md text-right text-slate-500 w-24"></td>
+      </tr>
+    </template>
+
+    <template id="alert-item-template">
+      <li class="alert-item rounded-md border border-slate-800 bg-slate-900 p-3 text-sm">
+        <div class="flex items-center justify-between">
+          <span class="alert-kind font-medium"></span>
+          <span class="alert-time text-slate-500 text-xs"></span>
+        </div>
+        <p class="alert-message text-slate-300 mt-1"></p>
+      </li>
+    </template>
+
+    <script src="/app.js"></script>
   </body>
 </html>
