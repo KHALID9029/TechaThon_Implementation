@@ -12,13 +12,13 @@ enough (PROJECT_PLAN.md §4.1) and avoids any cross-task connection contention.
 """
 from __future__ import annotations
 
-import datetime as dt
 from pathlib import Path
 from typing import Optional
 
 import aiosqlite
 
 from backend.config import config
+from backend.sim.clock import clock as default_clock
 from backend.state.models import Alert, Device, Room, RoomSnapshot, RoomState, Snapshot
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "db" / "schema.sql"
@@ -41,11 +41,19 @@ DEVICE_TEMPLATE: list[tuple[str, int, int]] = [
 
 
 def _now() -> str:
-    return dt.datetime.now(dt.timezone.utc).isoformat()
+    """Virtual-clock 'now' (ISO8601). Every store.py write that doesn't get an
+    explicit ts/day from its caller falls back to here -- never to raw
+    datetime.now() -- so seed data, alerts, and usage tracking all stay on the
+    same clock as the simulator and alert evaluator (backend/sim/clock.py).
+    Previously this called datetime.now(timezone.utc) directly, which meant
+    freshly-seeded devices got a real-wall-clock last_changed even when
+    SIM_START_TIME points the rest of the app at a different virtual time."""
+    return default_clock.now_iso()
 
 
 def _today() -> str:
-    return dt.datetime.now(dt.timezone.utc).date().isoformat()
+    """Virtual-clock current date ('YYYY-MM-DD')."""
+    return default_clock.today()
 
 
 def _device_id(room_id: str, kind: str, index: int) -> str:
