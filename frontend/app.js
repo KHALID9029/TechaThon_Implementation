@@ -1,6 +1,10 @@
 const state = {
   snapshot: null,
   reconnectDelay: 500,
+  displayedWatts: 0,
+  wattsAnimationFrame: null,
+  alertsMuted: true,
+  audioCtx: null,
 };
 
 const el = {
@@ -10,6 +14,7 @@ const el = {
   onlineDot: document.getElementById("online-dot"),
   onlineText: document.getElementById("online-text"),
   offlineBanner: document.getElementById("offline-banner"),
+  bellToggle: document.getElementById("bell-toggle"),
   rooms: document.getElementById("rooms"),
   deviceList: document.getElementById("device-list"),
   alertsList: document.getElementById("alerts-list"),
@@ -42,6 +47,28 @@ function setStatusDot(dotEl, isOn) {
   dotEl.classList.toggle("status-dot--off", !isOn);
 }
 
+function setTotalWattsInstant(watts) {
+  if (state.wattsAnimationFrame) cancelAnimationFrame(state.wattsAnimationFrame);
+  state.displayedWatts = watts;
+  el.totalWatts.textContent = Math.round(watts);
+}
+
+function tweenTotalWatts(target, duration = 500) {
+  if (state.wattsAnimationFrame) cancelAnimationFrame(state.wattsAnimationFrame);
+  const start = state.displayedWatts;
+  const startTime = performance.now();
+
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    state.displayedWatts = start + (target - start) * eased;
+    el.totalWatts.textContent = Math.round(state.displayedWatts);
+    state.wattsAnimationFrame = t < 1 ? requestAnimationFrame(step) : null;
+  }
+
+  state.wattsAnimationFrame = requestAnimationFrame(step);
+}
+
 function renderDeviceRow(device, roomName) {
   const row = deviceRowTemplate.content.cloneNode(true);
   const tr = row.querySelector(".device-row");
@@ -58,7 +85,7 @@ function renderDeviceRow(device, roomName) {
 function render(snapshot) {
   state.snapshot = snapshot;
 
-  el.totalWatts.textContent = snapshot.total_watts;
+  setTotalWattsInstant(snapshot.total_watts);
   el.todayKwh.textContent = snapshot.today_kwh.toFixed(1);
   el.serverClock.textContent = new Date(snapshot.server_time).toLocaleTimeString("en-GB");
 
@@ -97,7 +124,7 @@ function updateDevice(payload) {
 
   setDeviceSVGState(device);
 
-  el.totalWatts.textContent = total_watts;
+  setTotalWattsInstant(total_watts);
 
   if (state.snapshot) {
     const room = state.snapshot.rooms.find((r) => r.id === room_id);
@@ -111,7 +138,7 @@ function updateDevice(payload) {
 }
 
 function updateMeter(payload) {
-  el.totalWatts.textContent = payload.total_watts;
+  tweenTotalWatts(payload.total_watts);
   el.todayKwh.textContent = payload.today_kwh.toFixed(1);
   el.serverClock.textContent = new Date(payload.server_time).toLocaleTimeString("en-GB");
 
@@ -122,15 +149,67 @@ function updateMeter(payload) {
   }
 }
 
-function addAlert(alert) {
+function roomNameFor(roomId) {
+  if (!roomId) return "";
+  const room = state.snapshot && state.snapshot.rooms.find((r) => r.id === roomId);
+  return room ? room.name : roomId;
+}
+
+function addAlert(alert, { silent = false } = {}) {
   const item = alertItemTemplate.content.cloneNode(true);
+  item.querySelector(".alert-item").classList.add(`alert-item--${alert.kind}`);
   item.querySelector(".alert-kind").textContent = formatKind(alert.kind);
   const time = item.querySelector(".alert-time");
   time.textContent = formatRelativeTime(alert.created_at);
   time.dataset.ts = alert.created_at;
+  item.querySelector(".alert-room").textContent = roomNameFor(alert.room_id);
   item.querySelector(".alert-message").textContent = alert.message;
   el.alertsList.prepend(item);
+  if (!silent) playAlertBell();
 }
+
+async function loadAlertHistory() {
+  try {
+    const { alerts } = await (await fetch("/api/alerts?limit=50")).json();
+    // API returns newest-first; addAlert prepends, so walk oldest-to-newest
+    // to end up with the newest alert on top, same order as live alert_new.
+    for (const alert of [...alerts].reverse()) {
+      addAlert(alert, { silent: true });
+    }
+  } catch (err) {
+    console.error("Alert history fetch failed", err);
+  }
+}
+
+function ensureAudioContext() {
+  if (!state.audioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) state.audioCtx = new AudioCtx();
+  }
+  return state.audioCtx;
+}
+
+function playAlertBell() {
+  if (state.alertsMuted) return;
+  const ctx = ensureAudioContext();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.4);
+}
+
+el.bellToggle.addEventListener("click", () => {
+  state.alertsMuted = !state.alertsMuted;
+  if (!state.alertsMuted) ensureAudioContext();
+  el.bellToggle.textContent = state.alertsMuted ? "🔕" : "🔔";
+  el.bellToggle.setAttribute("aria-pressed", String(!state.alertsMuted));
+  el.bellToggle.title = state.alertsMuted ? "Alert sound: muted" : "Alert sound: on";
+});
 
 function setOnline(isOnline) {
   setStatusDot(el.onlineDot, isOnline);
@@ -179,6 +258,7 @@ async function init() {
   } catch (err) {
     console.error("Initial fetch failed", err);
   }
+  await loadAlertHistory();
   connect();
 }
 

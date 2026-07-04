@@ -75,3 +75,23 @@
     animation: none;
   }
 }
+
+.alert-item {
+  border-left-color: #475569;
+}
+
+.alert-item--after_hours {
+  border-left-color: #f87171;
+}
+
+.alert-item--after_hours .alert-kind {
+  color: #f87171;
+}
+
+.alert-item--all_on_2h {
+  border-left-color: #fbbf24;
+}
+
+.alert-item--all_on_2h .alert-kind {
+  color: #fbbf24;
+}

@@ -27,7 +27,14 @@
 
       <div id="server-clock" class="text-sm text-slate-400 tabular-nums">--:--:--</div>
 
-      <div class="flex items-center gap-2 text-sm ml-auto">
+      <div class="flex items-center gap-4 text-sm ml-auto">
+        <button
+          id="bell-toggle"
+          type="button"
+          aria-pressed="false"
+          title="Alert sound: muted"
+          class="text-slate-500 hover:text-slate-300 leading-none text-base"
+        >🔕</button>
         <span id="online-dot" class="status-dot"></span>
         <span id="online-text" class="text-slate-400">Connecting…</span>
       </div>
@@ -71,11 +78,12 @@
     </template>
 
     <template id="alert-item-template">
-      <li class="alert-item rounded-md border border-slate-800 bg-slate-900 p-3 text-sm">
-        <div class="flex items-center justify-between">
+      <li class="alert-item rounded-md border border-slate-800 border-l-4 bg-slate-900 p-3 text-sm">
+        <div class="flex items-center justify-between gap-2">
           <span class="alert-kind font-medium"></span>
-          <span class="alert-time text-slate-500 text-xs"></span>
+          <span class="alert-time text-slate-500 text-xs whitespace-nowrap"></span>
         </div>
+        <p class="alert-room text-xs text-slate-500 mt-0.5"></p>
         <p class="alert-message text-slate-300 mt-1"></p>
       </li>
     </template>
