@@ -137,6 +137,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="office-electricity-monitor mock backend", lifespan=lifespan)
 
 
+@app.middleware("http")
+async def no_cache(request, call_next):
+    # Dev convenience: without this, browsers heuristically cache the static frontend
+    # files (no Cache-Control from StaticFiles by default), so an edit + refresh during
+    # development can silently keep serving the old JS/CSS.
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}

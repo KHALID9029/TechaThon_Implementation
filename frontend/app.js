@@ -71,6 +71,7 @@ function render(snapshot) {
     article.id = `room-${room.id}`;
     article.querySelector(".room-name").textContent = room.name;
     article.querySelector(".room-watts").textContent = `${room.watts} W`;
+    article.querySelector(".room-svg-slot").innerHTML = buildRoomSVG(room);
     el.rooms.appendChild(card);
 
     for (const device of room.devices) {
@@ -93,6 +94,8 @@ function updateDevice(payload) {
 
   const roomCard = document.getElementById(`room-${room_id}`);
   if (roomCard) roomCard.querySelector(".room-watts").textContent = `${room_watts} W`;
+
+  setDeviceSVGState(device);
 
   el.totalWatts.textContent = total_watts;
 
