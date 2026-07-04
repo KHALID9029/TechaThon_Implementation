@@ -6,13 +6,8 @@ by hand, so there is exactly one place that can drift from the contract.
 """
 from __future__ import annotations
 
+from backend.config import OFFICE_HOURS_END, OFFICE_HOURS_START
 from backend.state.models import Alert, Device, RoomSnapshot, Snapshot
-
-# Office hours are fixed by the brief (9 AM-5 PM), not currently configurable.
-# Phase A4's alert evaluator should import these same constants rather than
-# hardcoding its own copy, so the two can never drift apart.
-OFFICE_HOURS_START = "09:00"
-OFFICE_HOURS_END = "17:00"
 
 
 def device_to_api(device: Device) -> dict:

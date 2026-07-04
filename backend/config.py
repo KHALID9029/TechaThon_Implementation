@@ -47,3 +47,10 @@ def _load() -> Config:
 
 
 config = _load()
+
+# Office hours are fixed by the brief (09:00-17:00) and are not currently
+# configurable via env. Both the API layer (backend/api/schemas.py) and the
+# alert evaluator (backend/alerts/evaluator.py) import these same two
+# constants so the two can never drift apart.
+OFFICE_HOURS_START = "09:00"
+OFFICE_HOURS_END = "17:00"
